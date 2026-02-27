@@ -1,0 +1,161 @@
+:root {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #1b2b34;
+  background: radial-gradient(circle at top left, #f4fff0, #e7eff9 45%, #f8f8f8 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.header {
+  padding: 16px;
+  border-radius: 14px;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(20, 38, 48, 0.08);
+}
+
+.header h1 {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.header p {
+  margin: 4px 0 0;
+  color: #547082;
+}
+
+.connection {
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  background: #edf2f5;
+}
+
+.connection--connected {
+  background: #d8f3dc;
+}
+
+.connection--reconnecting,
+.connection--connecting {
+  background: #ffe8b3;
+}
+
+.connection--error {
+  background: #ffd4d4;
+}
+
+.list-section {
+  padding: 16px;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 4px 16px rgba(20, 38, 48, 0.08);
+}
+
+.list-section h2 {
+  margin: 0 0 12px;
+  font-size: 1.3rem;
+}
+
+.items-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.item-row {
+  border: 1px solid #d7e2e9;
+  border-radius: 12px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 3fr) auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.item-row--done {
+  opacity: 0.75;
+}
+
+.purchase-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+}
+
+.purchase-toggle input {
+  width: 22px;
+  height: 22px;
+}
+
+.item-main {
+  display: grid;
+  gap: 4px;
+}
+
+.item-name {
+  font-size: 1rem;
+  padding: 8px;
+  border: 1px solid #bfd0db;
+  border-radius: 8px;
+}
+
+.item-meta {
+  font-size: 0.85rem;
+  color: #547082;
+}
+
+.qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty-controls button,
+.delete-btn {
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: #dfeaf1;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.delete-btn {
+  padding: 0 12px;
+  background: #ffdede;
+}
+
+.empty {
+  margin: 0;
+  padding: 8px;
+  color: #547082;
+}
+
+@media (max-width: 900px) {
+  .item-row {
+    grid-template-columns: 1fr;
+  }
+
+  .qty-controls {
+    justify-content: flex-start;
+  }
+}
