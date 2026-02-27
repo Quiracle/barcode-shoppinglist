@@ -1,6 +1,7 @@
 # Barcode Shopping List (Raspberry Pi, FastAPI, React, evdev)
 
 Local-first shopping list app for Raspberry Pi with an always-on USB barcode scanner.
+Includes a laptop-camera test mode so you can validate flows before you have Pi/scanner hardware.
 
 ## Implemented Scope
 
@@ -8,7 +9,7 @@ Local-first shopping list app for Raspberry Pi with an always-on USB barcode sca
 - Python backend with FastAPI, SQLite persistence, REST API, and WebSocket events.
 - React kiosk-friendly frontend with live updates.
 - Backend can serve built frontend from `http://localhost:8000`.
-- Offline-safe flow: product lookup provider is stubbed (`NoopLookupProvider`).
+- Barcode product enrichment from public databases (Open Beauty Facts / Open Food Facts / Open Pet Food Facts) with offline-safe fallback.
 
 ## Project Structure
 
@@ -88,6 +89,22 @@ Optional scanner settings:
 - `SCAN_DEBOUNCE_MS` (default `800`)
 - `BARCODE_LENGTHS` (default `8,12,13,14`)
 - `SQLITE_PATH` (default `backend/data/shopping.db`)
+- `ALLOW_NON_NUMERIC_SCANS` (default `0`; set `1` to accept QR text payloads for testing)
+- `PRODUCT_LOOKUP_PROVIDER` (default `open_facts`; set `noop` to disable lookups)
+- `PRODUCT_LOOKUP_SOURCES` (default `beauty,food,pet`)
+- `PRODUCT_LOOKUP_TIMEOUT_SECONDS` (default `3.0`)
+
+## Product Lookup Sources (Public APIs)
+
+This project uses the Open Food Facts family of public APIs:
+
+- Open Beauty Facts: `https://world.openbeautyfacts.org/api/v2/product/{barcode}.json`
+- Open Food Facts: `https://world.openfoodfacts.org/api/v2/product/{barcode}.json`
+- Open Pet Food Facts: `https://world.openpetfoodfacts.org/api/v2/product/{barcode}.json`
+
+Example validation:
+
+- Barcode `8480000465702` resolves in Open Beauty Facts as `Shampoo Protección y Brillo` with an image URL.
 
 ## Run (Development)
 
@@ -108,6 +125,38 @@ npm run dev -- --host 0.0.0.0 --port 5173
 
 - Backend API + WS: `http://<pi-ip>:8000`
 - Frontend dev UI: `http://<pi-ip>:5173`
+
+If frontend is running on `:5173`, it targets backend `http://localhost:8000` by default.
+Override with:
+```bash
+export VITE_API_BASE_URL=http://<pi-ip>:8000
+```
+
+## Run With Docker (Recommended Quick Test)
+
+This starts:
+- Backend API (+ backend-served built UI) at `http://localhost:8000`
+- Dedicated frontend container at `http://localhost:5173`
+
+```bash
+docker compose up --build -d
+```
+
+Open:
+```text
+http://localhost:5173
+```
+
+Stop:
+```bash
+docker compose down
+```
+
+Optional frontend dev container (Vite on `http://localhost:5173`):
+```bash
+docker compose --profile dev up --build -d
+```
+Dev frontend runs on `http://localhost:5174`.
 
 ## Run (Production Build Served by Backend)
 
@@ -158,6 +207,7 @@ sudo udevadm trigger
 - `POST /api/lists`
 - `GET /api/lists/{listId}/items`
 - `POST /api/lists/{listId}/items/manual`
+- `POST /api/scans` (test ingestion path, used by camera scanner)
 - `PATCH /api/items/{itemId}`
 - `DELETE /api/items/{itemId}`
 - WebSocket: `/ws`
@@ -203,6 +253,25 @@ Checklist from `implementation.md`:
 3. Toggle purchased -> item moves to "Purchased"
 4. Reboot Pi / restart backend -> list and items remain in SQLite
 
+## Laptop Testing (No Raspberry Pi / No USB Scanner)
+
+1. Start backend:
+```bash
+cd backend
+source .venv/bin/activate
+export ALLOW_NON_NUMERIC_SCANS=1
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+2. Start frontend:
+```bash
+cd frontend
+npm run dev
+```
+
+3. Open `http://localhost:5173` and use the `Camera Test Scanner` panel.
+4. Present a QR code to your laptop camera. The code is sent to `POST /api/scans` and goes through the same add-or-increment + WebSocket update flow.
+
 ## Troubleshooting
 
 ### Scanner not found
@@ -231,9 +300,16 @@ sudo evtest
 
 - Scanner output must be numeric and match allowed lengths.
 - Update `BARCODE_LENGTHS` if scanner emits uncommon barcode lengths.
+- For QR text testing, set `ALLOW_NON_NUMERIC_SCANS=1`.
+
+### Product lookup not resolving
+
+- Public datasets are community-maintained; not every barcode exists.
+- Increase timeout with `PRODUCT_LOOKUP_TIMEOUT_SECONDS` if network is slow.
+- Disable lookups for fully offline mode with `PRODUCT_LOOKUP_PROVIDER=noop`.
 
 ## Simplifying Decisions Made (Not Explicitly Defined)
 
 - Used a fixed default list ID (`default`) to guarantee deterministic startup behavior.
-- Implemented product lookup as a no-op provider to preserve offline behavior by default.
+- Implemented public Open Facts lookup by default, with `noop` mode available for fully offline operation.
 - Manual item add is supported only via API (no dedicated UI modal in MVP UI).

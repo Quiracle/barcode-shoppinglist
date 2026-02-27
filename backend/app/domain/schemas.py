@@ -26,3 +26,8 @@ class EventMessage(BaseModel):
     type: str
     listId: str
     item: dict
+
+
+class ScanIngestRequest(BaseModel):
+    barcode: str = Field(min_length=1, max_length=512)
+    listId: Optional[str] = None

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 
 export function ItemRow({ item, onUpdate, onDelete }) {
   const [draftName, setDraftName] = useState(item.name);

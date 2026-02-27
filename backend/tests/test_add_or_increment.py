@@ -42,3 +42,20 @@ def test_add_or_increment_does_not_increment_purchased_item(tmp_path: Path) -> N
     assert new_item["id"] != purchased["id"]
     assert new_item["purchased"] == 0
     assert new_item["quantity"] == 1
+
+
+def test_add_or_increment_accepts_non_numeric_when_enabled(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    debouncer = ScanDebouncer(window_ms=0)
+
+    item = add_or_increment_item(
+        repo,
+        debouncer,
+        DEFAULT_LIST_ID,
+        "HELLO-QR-123",
+        allowed_lengths=(12,),
+        allow_non_numeric=True,
+    )
+
+    assert item is not None
+    assert item["barcode"] == "HELLO-QR-123"

@@ -15,8 +15,9 @@ from app.data.db import DEFAULT_LIST_ID, Database
 from app.data.repositories import ShoppingRepository
 from app.domain.add_or_increment import add_or_increment_item
 from app.domain.models import ScanDebouncer
-from app.domain.schemas import ItemPatch, ManualItemCreate, ShoppingListCreate
+from app.domain.schemas import ItemPatch, ManualItemCreate, ScanIngestRequest, ShoppingListCreate
 from app.providers.noop import NoopLookupProvider
+from app.providers.open_facts import OpenFactsLookupProvider
 from app.scanner.evdev_reader import EvdevScannerReader, scanner_config_from_env
 
 logger = logging.getLogger(__name__)
@@ -63,13 +64,27 @@ app.add_middleware(
 
 DB_PATH = os.getenv("SQLITE_PATH", str(Path(__file__).resolve().parents[2] / "data" / "shopping.db"))
 BARCODE_LENGTHS = tuple(int(v) for v in os.getenv("BARCODE_LENGTHS", "8,12,13,14").split(",") if v.strip())
+ALLOW_NON_NUMERIC_SCANS = os.getenv("ALLOW_NON_NUMERIC_SCANS", "0").lower() in {"1", "true", "yes", "on"}
 
 
 db = Database(DB_PATH)
 repo = ShoppingRepository(db)
 debouncer = ScanDebouncer(window_ms=int(os.getenv("SCAN_DEBOUNCE_MS", "800")))
 ws_hub = WebSocketHub()
-lookup_provider = NoopLookupProvider()
+
+lookup_mode = os.getenv("PRODUCT_LOOKUP_PROVIDER", "open_facts").strip().lower()
+if lookup_mode == "noop":
+    lookup_provider = NoopLookupProvider()
+else:
+    configured_sources = tuple(
+        value.strip().lower()
+        for value in os.getenv("PRODUCT_LOOKUP_SOURCES", "beauty,food,pet").split(",")
+        if value.strip()
+    )
+    lookup_provider = OpenFactsLookupProvider(
+        timeout_seconds=float(os.getenv("PRODUCT_LOOKUP_TIMEOUT_SECONDS", "3.0")),
+        sources=configured_sources,
+    )
 
 scanner_reader = EvdevScannerReader(
     config=scanner_config_from_env(),
@@ -100,16 +115,17 @@ def maybe_enrich_item(item: dict[str, Any]) -> dict[str, Any]:
     return updated or item
 
 
-def handle_scanned_barcode(barcode: str) -> None:
+def handle_scanned_barcode(barcode: str, list_id: str = DEFAULT_LIST_ID) -> dict[str, Any] | None:
     item = add_or_increment_item(
         repository=repo,
         debouncer=debouncer,
-        list_id=DEFAULT_LIST_ID,
+        list_id=list_id,
         barcode=barcode,
         allowed_lengths=BARCODE_LENGTHS,
+        allow_non_numeric=ALLOW_NON_NUMERIC_SCANS,
     )
     if item is None:
-        return
+        return None
 
     enriched = maybe_enrich_item(item)
 
@@ -125,6 +141,7 @@ def handle_scanned_barcode(barcode: str) -> None:
         app_loop = getattr(app.state, "loop", None)
         if app_loop is not None:
             asyncio.run_coroutine_threadsafe(_broadcast(), app_loop)
+    return enriched
 
 
 @app.on_event("startup")
@@ -191,6 +208,15 @@ async def delete_item(item_id: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="Item not found")
     await ws_hub.broadcast({"type": "item_deleted", "listId": deleted["listId"], "item": deleted})
     return {"ok": True}
+
+
+@app.post("/api/scans")
+def ingest_scan(payload: ScanIngestRequest) -> dict[str, Any]:
+    target_list_id = payload.listId or DEFAULT_LIST_ID
+    if repo.get_list(target_list_id) is None:
+        raise HTTPException(status_code=404, detail="List not found")
+    item = handle_scanned_barcode(payload.barcode, target_list_id)
+    return {"accepted": item is not None, "item": item}
 
 
 @app.websocket("/ws")

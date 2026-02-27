@@ -1,3 +1,5 @@
+import React from "react";
+
 function statusLabel(status) {
   if (status === "connected") return "Connected";
   if (status === "reconnecting") return "Reconnecting";

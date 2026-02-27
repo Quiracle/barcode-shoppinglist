@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { apiDelete, apiGet, apiPatch } from "../api/client";
+import { apiDelete, apiGet, apiPatch, apiPost } from "../api/client";
 
 const DEFAULT_LIST_ID = "default";
 
@@ -110,6 +110,27 @@ export function useShoppingList() {
     setItems((current) => current.filter((item) => item.id !== itemId));
   }, []);
 
+  const submitScan = useCallback(
+    async (barcode) => {
+      if (!barcode || !barcode.trim()) return { accepted: false, item: null };
+      const result = await apiPost("/api/scans", {
+        barcode: barcode.trim(),
+        listId: activeListId,
+      });
+      if (result?.item) {
+        setItems((current) => {
+          const idx = current.findIndex((it) => it.id === result.item.id);
+          if (idx === -1) return [result.item, ...current];
+          const clone = [...current];
+          clone[idx] = result.item;
+          return clone;
+        });
+      }
+      return result;
+    },
+    [activeListId]
+  );
+
   const toBuy = useMemo(
     () => items.filter((item) => item.purchased === 0 || item.purchased === false),
     [items]
@@ -123,11 +144,13 @@ export function useShoppingList() {
   return {
     activeList,
     activeListId,
+    items,
     toBuy,
     purchased,
     connectionStatus,
     updateItem,
     deleteItem,
+    submitScan,
     reload: load,
   };
 }

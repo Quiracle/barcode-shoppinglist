@@ -27,12 +27,16 @@ def add_or_increment_item(
     list_id: str,
     barcode: str,
     allowed_lengths: tuple[int, ...] = (8, 12, 13, 14),
+    allow_non_numeric: bool = False,
 ) -> Optional[dict]:
     normalized = normalize_barcode(barcode)
     if normalized is None:
         return None
 
-    if not barcode_is_valid(normalized, allowed_lengths):
+    if allow_non_numeric:
+        if allowed_lengths and len(normalized) not in allowed_lengths:
+            return None
+    elif not barcode_is_valid(normalized, allowed_lengths):
         return None
 
     decision = debouncer.should_accept(normalized)

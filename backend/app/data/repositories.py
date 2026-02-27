@@ -90,7 +90,7 @@ class ShoppingRepository:
                        userEditedName, createdAt, updatedAt, lastAddedAt
                 FROM items
                 WHERE listId = ?
-                ORDER BY purchased ASC, updatedAt DESC, createdAt DESC
+                ORDER BY createdAt ASC
                 """,
                 (list_id,),
             ).fetchall()
