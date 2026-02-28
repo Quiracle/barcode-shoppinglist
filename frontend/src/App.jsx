@@ -144,57 +144,57 @@ export function App() {
       ) : null}
 
       {selectedItem ? (
-        <section className="overlay">
-          <div className="detail">
-            <header className="detail-nav">
-              <button onClick={() => setSelectedItemId(null)}>BACK</button>
-            </header>
+        <section className="detail detail--fullscreen">
+          <header className="detail-nav">
+            <button onClick={() => setSelectedItemId(null)}>BACK</button>
+          </header>
 
-            <div className="detail-hero">
+          <div className="detail-hero">
+            <div className="detail-hero-box">
               {selectedItem.imageUrl ? (
                 <img src={selectedItem.imageUrl} alt={selectedItem.name || "Product"} />
               ) : (
                 <span>{(selectedItem.name || "?").slice(0, 1).toUpperCase()}</span>
               )}
             </div>
+          </div>
 
-            <div className="detail-head">
-              <h2>{selectedItem.name || "Unknown item"}</h2>
-              <p>{selectedItem.barcode || "NO BARCODE"}</p>
-            </div>
+          <div className="detail-head">
+            <h2>{selectedItem.name || "Unknown item"}</h2>
+            <p>{selectedItem.barcode || "NO BARCODE"}</p>
+          </div>
 
-            <div className="stepper">
-              <label>SELECT QUANTITY</label>
-              <div className="stepper-control">
-                <button
-                  onClick={() =>
-                    updateItem(selectedItem.id, {
-                      quantity: Math.max(1, selectedItem.quantity - 1),
-                    })
-                  }
-                >
-                  -
-                </button>
-                <strong>{String(selectedItem.quantity).padStart(2, "0")}</strong>
-                <button onClick={() => updateItem(selectedItem.id, { quantity: selectedItem.quantity + 1 })}>
-                  +
-                </button>
-              </div>
-            </div>
-
-            <div className="detail-actions">
-              <button onClick={() => updateItem(selectedItem.id, { purchased: !selectedItem.purchased })}>
-                {selectedItem.purchased ? "MARK UNPURCHASED" : "MARK PURCHASED"}
-              </button>
+          <div className="stepper">
+            <label>SELECT QUANTITY</label>
+            <div className="stepper-control">
               <button
-                onClick={async () => {
-                  await deleteItem(selectedItem.id);
-                  setSelectedItemId(null);
-                }}
+                onClick={() =>
+                  updateItem(selectedItem.id, {
+                    quantity: Math.max(1, selectedItem.quantity - 1),
+                  })
+                }
               >
-                DELETE ITEM
+                -
+              </button>
+              <strong>{String(selectedItem.quantity).padStart(2, "0")}</strong>
+              <button onClick={() => updateItem(selectedItem.id, { quantity: selectedItem.quantity + 1 })}>
+                +
               </button>
             </div>
+          </div>
+
+          <div className="detail-actions">
+            <button onClick={() => updateItem(selectedItem.id, { purchased: !selectedItem.purchased })}>
+              {selectedItem.purchased ? "MARK UNPURCHASED" : "MARK PURCHASED"}
+            </button>
+            <button
+              onClick={async () => {
+                await deleteItem(selectedItem.id);
+                setSelectedItemId(null);
+              }}
+            >
+              DELETE ITEM
+            </button>
           </div>
         </section>
       ) : null}

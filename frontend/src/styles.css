@@ -63,6 +63,7 @@ body {
   text-transform: uppercase;
   padding: 8px 10px;
   cursor: pointer;
+  transition: transform 140ms ease, filter 180ms ease;
 }
 
 .list-stream {
@@ -82,6 +83,7 @@ body {
   padding: 12px 16px;
   background: var(--bg);
   cursor: pointer;
+  transition: background-color 180ms ease, transform 140ms ease;
 }
 
 .stream-row--checked {
@@ -137,6 +139,7 @@ body {
   font: 700 12px/1 "Space Grotesk", sans-serif;
   padding: 0;
   cursor: pointer;
+  transition: transform 120ms ease, background-color 180ms ease, border-color 180ms ease;
 }
 
 .check--on {
@@ -156,6 +159,7 @@ body {
   font: 700 20px/28px "Space Grotesk", sans-serif;
   text-transform: uppercase;
   cursor: pointer;
+  transition: transform 160ms ease, filter 200ms ease;
 }
 
 .trip-cta span:last-child {
@@ -246,6 +250,7 @@ body {
   border: 2px solid var(--ink);
   text-transform: uppercase;
   cursor: pointer;
+  transition: transform 140ms ease, filter 180ms ease;
 }
 
 .empty-primary {
@@ -302,11 +307,12 @@ body {
   padding: 12px;
   background: rgba(15, 15, 15, 0.45);
   z-index: 100;
+  animation: fade-in 180ms ease-out;
 }
 
 .overlay--dim {
   align-items: end;
-  padding-bottom: 0;
+  padding: 0 12px 0;
   background: rgba(15, 15, 15, 0.8);
 }
 
@@ -328,6 +334,7 @@ body {
   text-transform: uppercase;
   cursor: pointer;
   margin-bottom: 10px;
+  transition: transform 140ms ease, filter 180ms ease;
 }
 
 .detail {
@@ -336,6 +343,19 @@ body {
   overflow: auto;
   background: var(--bg);
   border: 2px solid var(--ink);
+}
+
+.detail--fullscreen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
+  border: none;
+  overflow: auto;
+  z-index: 120;
 }
 
 .detail-nav {
@@ -352,24 +372,41 @@ body {
   font: 700 14px/20px "Space Grotesk", sans-serif;
   text-decoration: underline;
   cursor: pointer;
+  transition: transform 140ms ease, filter 180ms ease;
 }
 
 .detail-hero {
-  height: 390px;
+  min-height: 390px;
   border-bottom: 2px solid var(--ink);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.detail-hero-box {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 2px solid var(--ink);
+  border-left: none;
+  border-right: none;
   background: var(--placeholder);
   display: grid;
   place-items: center;
+  overflow: hidden;
 }
 
-.detail-hero span {
+.detail-hero-box span {
   font: 700 88px/1 "Space Grotesk", sans-serif;
 }
 
-.detail-hero img {
+.detail-hero-box img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 0;
 }
 
 .detail-head {
@@ -439,6 +476,7 @@ body {
   letter-spacing: 0.35px;
   text-transform: uppercase;
   cursor: pointer;
+  transition: transform 140ms ease, filter 180ms ease;
 }
 
 .detail-actions button:first-child {
@@ -447,13 +485,14 @@ body {
 }
 
 .receipt {
-  width: min(390px, 100vw);
+  width: min(390px, calc(100vw - 24px));
   max-height: 92vh;
   overflow: auto;
   border: 2px solid var(--ink);
   border-bottom: none;
   background: var(--bg);
   padding: 16px 24px 40px;
+  animation: receipt-rise 260ms cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
 .grabber {
@@ -512,6 +551,7 @@ body {
   letter-spacing: 0.45px;
   text-transform: uppercase;
   cursor: pointer;
+  transition: transform 140ms ease, filter 180ms ease;
 }
 
 .btn-danger {
@@ -525,6 +565,7 @@ body {
   letter-spacing: 0.35px;
   text-transform: uppercase;
   cursor: pointer;
+  transition: transform 140ms ease, filter 180ms ease;
 }
 
 .btn-primary:disabled,
@@ -544,6 +585,7 @@ body {
   text-decoration: underline;
   text-transform: uppercase;
   cursor: pointer;
+  transition: transform 140ms ease, filter 180ms ease;
 }
 
 .scanner-help,
@@ -579,4 +621,35 @@ body {
   max-height: 260px;
   border: 2px solid var(--ink);
   background: var(--placeholder);
+}
+
+button:active,
+.trip-cta:active,
+.stream-row:active {
+  transform: translateY(1px) scale(0.995);
+}
+
+button:hover,
+.trip-cta:hover {
+  filter: brightness(0.96);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes receipt-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
